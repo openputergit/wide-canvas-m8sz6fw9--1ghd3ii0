@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video2Quiz - Learning Made Easy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<style>
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+    .loading-bar {
+        width: 100%;
+        height: 4px;
+        background-color: #ddd;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .loading-progress {
+        height: 100%;
+        background-color: #3b82f6;
+        transition: width 0.3s ease;
+    }
+</style>
+<body class="bg-gray-50">
+    <div id="auth-container" class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div class="text-center">
+                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Video2Quiz</h2>
+                <p class="mt-2 text-sm text-gray-600">Convert videos to PDFs and Quizzes</p>
+            </div>
+            <div class="mt-8 space-y-6">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <input id="email" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Email address">
+                    </div>
+                    <div>
+                        <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Password">
+                    </div>
+                </div>
+                <div>
+                    <button onclick="handleAuth('signin')" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Sign In</button>
+                </div>
+                <div>
+                    <button onclick="handleAuth('signup')" class="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-container" class="hidden">
+        <nav class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <h1 class="text-xl font-bold text-blue-600">Video2Quiz</h1>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <button onclick="logout()" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <div class="border-4 border-dashed border-gray-200 rounded-lg p-6">
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Upload Video</h3>
+                            <div class="mt-2">
+                                <input type="file" accept="video/*" id="video-upload" class="sr-only">
+                                <label for="video-upload" class="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                    <span class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">Choose file</span>
+                                </label>
+                                <p class="mt-1 text-sm text-gray-500">Or enter video URL:</p>
+                                <input type="text" id="video-url" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="https://example.com/video.mp4">
+                            </div>
+                        </div>
+
+                        <div id="processing-container" class="hidden">
+                            <h4 class="text-sm font-medium text-gray-900">Processing Video</h4>
+                            <div class="loading-bar mt-2">
+                                <div id="processing-progress" class="loading-progress" style="width: 0%"></div>
+                            </div>
+                            <p id="processing-status" class="mt-1 text-sm text-gray-500">0%</p>
+                        </div>
+
+                        <div id="language-selection" class="hidden">
+                            <h4 class="text-sm font-medium text-gray-900">Select Output Language</h4>
+                            <select id="language" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                <option value="en">English</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                            </select>
+                        </div>
+
+                        <div id="quiz-options" class="hidden">
+                            <h4 class="text-sm font-medium text-gray-900">Quiz Options</h4>
+                            <div class="mt-2 space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Number of Questions</label>
+                                    <input type="number" id="question-count" min="1" max="20" value="10" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Question Types</label>
+                                    <div class="mt-2 space-y-2">
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" checked>
+                                            <span class="ml-2 text-sm text-gray-600">Multiple Choice</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" checked>
+                                            <span class="ml-2 text-sm text-gray-600">True/False</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                            <span class="ml-2 text-sm text-gray-600">Fill in the Blank</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                            <span class="ml-2 text-sm text-gray-600">Short Answer</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="progress-chart" class="hidden">
+                            <h4 class="text-sm font-medium text-gray-900">Your Progress</h4>
+                            <div class="mt-4 h-64">
+                                <canvas id="progressChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div id="history" class="hidden">
+                            <h4 class="text-sm font-medium text-gray-900">History</h4>
+                            <div class="mt-4 space-y-4">
+                                <!-- History items will be dynamically added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simulated authentication
+        function handleAuth(type) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (type === 'signup') {
+                // Simulate email verification
+                alert('Verification email sent. Please check your inbox.');
+            }
+
+            document.getElementById('auth-container').classList.add('hidden');
+            document.getElementById('main-container').classList.remove('hidden');
+            initializeProgressChart();
+        }
+
+        function logout() {
+            document.getElementById('auth-container').classList.remove('hidden');
+            document.getElementById('main-container').classList.add('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Video processing simulation
+        document.getElementById('video-upload').addEventListener('change', handleVideoUpload);
+        document.getElementById('video-url').addEventListener('blur', handleVideoUrl);
+
+        function handleVideoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                startProcessing();
+            }
+        }
+
+        function handleVideoUrl() {
+            const url = document.getElementById('video-url').value;
+            if (url) {
+                startProcessing();
+            }
+        }
+
+        function startProcessing() {
+            const processingContainer = document.getElementById('processing-container');
+            const progressBar = document.getElementById('processing-progress');
+            const statusText = document.getElementById('processing-status');
+            
+            processingContainer.classList.remove('hidden');
+            let progress = 0;
+
+            const interval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = `${progress}%`;
+                statusText.textContent = `${progress}%`;
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('language-selection').classList.remove('hidden');
+                    document.getElementById('quiz-options').classList.remove('hidden');
+                    document.getElementById('progress-chart').classList.remove('hidden');
+                    document.getElementById('history').classList.remove('hidden');
+                    addToHistory();
+                }
+            }, 200);
+        }
+
+        // Progress chart
+        function initializeProgressChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Quiz Scores',
+                        data: [75, 82, 90, 85],
+                        borderColor: 'rgb(59, 130, 246)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // History management
+        function addToHistory() {
+            const historyContainer = document.getElementById('history');
+            const historyItem = document.createElement('div');
+            historyItem.className = 'flex items-center justify-between p-4 bg-white shadow rounded-lg';
+            historyItem.innerHTML = `
+                <div>
+                    <h5 class="text-sm font-medium text-gray-900">Video ${Math.floor(Math.random() * 1000)}</h5>
+                    <p class="text-sm text-gray-500">Processed on ${new Date().toLocaleDateString()}</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="text-sm text-blue-600 hover:text-blue-500">Download PDF</button>
+                    <button class="text-sm text-blue-600 hover:text-blue-500">View Quiz</button>
+                </div>
+            `;
+            historyContainer.querySelector('.space-y-4').appendChild(historyItem);
+        }
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
